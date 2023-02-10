@@ -9,6 +9,7 @@ const { transport } = require("../mailer");
 // Dashboard route
 
 router.get("/dashboard", adminLoggedIn, (req, res) => {
+    //okr_team   ----<works_on>----   usersid
     db.query('SELECT * FROM okr_team', (err, result) => {
         if (err) {
             console.log(err);

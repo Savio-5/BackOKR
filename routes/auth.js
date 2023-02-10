@@ -90,10 +90,11 @@ passport.deserializeUser(function (user, cb) {
 
 const router = express.Router();
 
-router.post("/login/admin", passport.authenticate("admin",{
-  successReturnToOrRedirect: "/api/admin/dashboard",
-  failureRedirect: "/api/auth/login/admin",
-}));
+router.post("/login/admin", passport.authenticate("admin"), (req, res) => {
+    if (req.isAuthenticated() && req.user.role == "admin") {
+      res.json(req.user)
+    }
+  });
 
 router.post("/login", passport.authenticate("user",{
   successReturnToOrRedirect: "/api/user/dashboard",
@@ -115,6 +116,7 @@ router.post("/logout", function (req, res, next) {
     res.redirect("/");
   });
 });
+
 
 // router.post("/signup", passport.authenticate("local-signup"), (req, res) => {
 //   if (req.isAuthenticated() && req.user.role == "admin") {
