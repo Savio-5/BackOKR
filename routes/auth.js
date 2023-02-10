@@ -17,7 +17,6 @@ passport.use(
       db.query(
         "SELECT * FROM users WHERE emailid = ?",
         [emailid],
-
         function (err, row) {
           if (err) {
             return done(err);

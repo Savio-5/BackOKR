@@ -60,8 +60,8 @@ router.get('/view-teams', (req, res) => {
 });
 
 router.post('/add-objective', (req, res) => {
-    const { objective } = req.body;
-    db.query('INSERT INTO okr (objective_id, name) VALUES (?,?)', [v4(), objective], (err, result) => {
+    const { objective, user_id } = req.body;
+    db.query('INSERT INTO okr (objective_id, name, user_id) VALUES (?,?,?)', [v4(), objective, user_id], (err, result) => {
         if (err) {
             console.log(err);
         } else {
@@ -83,6 +83,33 @@ router.delete('/delete-objective/:id', (req, res) => {
         }
     });
 });
+
+
+router.post('/add-keyresult', (req, res) => {
+    const { keyname, startdate, enddate, obj_name} = req.body;
+    const keyid = v4();
+    db.query('INSERT INTO key_attributes (keyid, key_name) VALUES (?,?)', [keyid, keyname], (err, result1) => {
+        if (err) {
+            console.log(err);
+        } else {
+            db.query('SELECT objective_id FROM okr WHERE objective_name = ?' [obj_name], (err, result2) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    db.query('INSERT INTO obj_contains (objective_id, keyid, startdate, enddate) VALUES (?,?,?,?)', [result2.objective_id, keyid, startdate, enddate], (err, result3) => {
+                        if (err) {
+                            console.log(err);
+                        } else {
+                            res.json(result3);
+                        }
+                    });
+                }
+            });
+            
+        }
+    });
+});
+            
 
 
 
