@@ -6,7 +6,7 @@ const bcrypt = require("bcrypt");
 const db = require("../db/connectdb");
 
 passport.use(
-  "local",
+  "user",
   new LocalStrategy(
     {
       usernameField: "emailid",
@@ -16,6 +16,39 @@ passport.use(
     function (req, emailid, password, done) {
       db.query(
         "SELECT * FROM users WHERE emailid = ?",
+        [emailid],
+        function (err, row) {
+          if (err) {
+            return done(err);
+          }
+          if (!row.length) {
+            return done(null, false, {
+              message: "Incorrect username or password.",
+            });
+          }
+          if (!bcrypt.compareSync(password, row[0].password.toString("utf8"))) {
+            return done(null, false, {
+              message: "Incorrect username or password.",
+            });
+          }
+          return done(null, row[0]);
+        }
+      );
+    }
+  )
+);
+
+passport.use(
+  "admin",
+  new LocalStrategy(
+    {
+      usernameField: "emailid",
+      passwordField: "password",
+      passReqToCallback: true,
+    },
+    function (req, emailid, password, done) {
+      db.query(
+        "SELECT * FROM admin WHERE emailid = ?",
         [emailid],
         function (err, row) {
           if (err) {
@@ -57,12 +90,14 @@ passport.deserializeUser(function (user, cb) {
 
 const router = express.Router();
 
-router.post("/login", passport.authenticate("local"), (req, res) => {
-  if (req.isAuthenticated() && req.user.role == "admin") {
-    res.redirect("/admin");
-  }
-  if (req.isAuthenticated() && req.user.role == "user") {
-    res.redirect("/user");
+router.post("/login/admin", passport.authenticate("admin",{
+  successReturnToOrRedirect: "/",
+  failureRedirect: "/login",
+}));
+
+router.post("/login", passport.authenticate("user"), (req, res) => {
+  if (req.isAuthenticated()) {
+    res.redirect("/");
   }
 });
 
@@ -109,7 +144,7 @@ passport.use(
                 id: v4(),
                 name: req.body.fname + " " + req.body.lname,
                 emailid: emailid,
-                role: req.body.role,
+                role: 'user',
                 password: bcrypt.hashSync(password, salt),
               };
 
