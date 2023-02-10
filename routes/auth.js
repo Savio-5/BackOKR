@@ -92,7 +92,7 @@ const router = express.Router();
 
 router.post("/login/admin", passport.authenticate("admin",{
   successReturnToOrRedirect: "/",
-  failureRedirect: "/login",
+  failureRedirect: "/api/auth/login/admin", // optional, see Options below
 }));
 
 router.post("/login", passport.authenticate("user"), (req, res) => {
