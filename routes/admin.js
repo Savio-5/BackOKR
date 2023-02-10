@@ -6,8 +6,20 @@ const generator = require("generate-password");
 const { adminLoggedIn } = require("../middleware/ensureLoggedIn");
 const { transport } = require("../mailer");
 
+// Dashboard route
+
+router.get("/dashboard", adminLoggedIn, (req, res) => {
+    db.query('SELECT * FROM okr_team', (err, result) => {
+        if (err) {
+            console.log(err);
+        } else {
+            res.json(result);
+        }
+    });
+});
+
+
 router.get("/view-user", adminLoggedIn, (req, res) => {
-    console.log(req.isAuthenticated());
   db.query("SELECT * FROM users", (err, result) => {
     if (err) {
       console.log(err);
@@ -17,7 +29,7 @@ router.get("/view-user", adminLoggedIn, (req, res) => {
   });
 });
 
-router.post("/add-user", (req, res) => {
+router.post("/add-user", adminLoggedIn, (req, res) => {
   const { name, emailid } = req.body;
   const password = generator.generate({
     length: 10,
@@ -65,7 +77,7 @@ router.post("/add-user", (req, res) => {
   );
 });
 
-router.post("/create-team", (req, res) => {
+router.post("/create-team", adminLoggedIn, (req, res) => {
   const { teamname, teamcolor, teamtitle } = req.body;
   db.query(
     "INSERT INTO okr_team (team_id, team_name, tcolor, title) VALUES (?,?,?,?)",
@@ -82,7 +94,7 @@ router.post("/create-team", (req, res) => {
   );
 });
 
-router.get("/view-teams", (req, res) => {
+router.get("/view-teams", adminLoggedIn, (req, res) => {
   db.query("SELECT * FROM okr_team", (err, result) => {
     if (err) {
       console.log(err);
@@ -92,7 +104,7 @@ router.get("/view-teams", (req, res) => {
   });
 });
 
-router.post("/add-objective", (req, res) => {
+router.post("/add-objective", adminLoggedIn, (req, res) => {
   const { objective, user_id } = req.body;
   db.query(
     "INSERT INTO okr (objective_id, name, user_id) VALUES (?,?,?)",
@@ -110,7 +122,7 @@ router.post("/add-objective", (req, res) => {
   );
 });
 
-router.delete("/delete-objective/:id", (req, res) => {
+router.delete("/delete-objective/:id", adminLoggedIn, (req, res) => {
   const id = req.params.id;
   db.query("DELETE FROM okr WHERE objective_id = ?", id, (err, result) => {
     if (err) {
@@ -121,7 +133,7 @@ router.delete("/delete-objective/:id", (req, res) => {
   });
 });
 
-router.post("/add-keyresult", (req, res) => {
+router.post("/add-keyresult", adminLoggedIn, (req, res) => {
   const { keyname, startdate, enddate, obj_name } = req.body;
   const keyid = v4();
   db.query(

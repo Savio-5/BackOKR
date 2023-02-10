@@ -1,4 +1,4 @@
-const { v4 } = require("uuid");
+// const { v4 } = require("uuid");
 const express = require("express");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
@@ -91,15 +91,20 @@ passport.deserializeUser(function (user, cb) {
 const router = express.Router();
 
 router.post("/login/admin", passport.authenticate("admin",{
-  successReturnToOrRedirect: "/",
-  failureRedirect: "/api/auth/login/admin", // optional, see Options below
+  successReturnToOrRedirect: "/api/admin/dashboard",
+  failureRedirect: "/api/auth/login/admin",
 }));
 
-router.post("/login", passport.authenticate("user"), (req, res) => {
-  if (req.isAuthenticated()) {
-    res.redirect("/");
-  }
-});
+router.post("/login", passport.authenticate("user",{
+  successReturnToOrRedirect: "/api/user/dashboard",
+  failureRedirect: "/api/auth/login",
+})
+// , (req, res) => {
+//   if (req.isAuthenticated()) {
+//     res.redirect("/");
+//   }
+// }
+);
 
 router.post("/logout", function (req, res, next) {
   req.logout(function (err) {
@@ -111,62 +116,62 @@ router.post("/logout", function (req, res, next) {
   });
 });
 
-router.post("/signup", passport.authenticate("local-signup"), (req, res) => {
-  if (req.isAuthenticated() && req.user.role == "admin") {
-    res.redirect("/admin");
-  }
-  if (req.isAuthenticated() && req.user.role == "user") {
-    res.redirect("/user");
-  }
-});
+// router.post("/signup", passport.authenticate("local-signup"), (req, res) => {
+//   if (req.isAuthenticated() && req.user.role == "admin") {
+//     res.redirect("/admin");
+//   }
+//   if (req.isAuthenticated() && req.user.role == "user") {
+//     res.redirect("/user");
+//   }
+// });
 
-passport.use(
-  "local-signup",
-  new LocalStrategy(
-    {
-      usernameField: "emailid",
-      passwordField: "password",
-      passReqToCallback: true,
-    },
-    function (req, emailid, password, done) {
-        db.query(
-          "SELECT * FROM users WHERE emailid = ?",
-          [emailid],
-          function (err, rows) {
-            if (err) return done(err);
-            if (rows.length) {
-              return done(null, false, {
-                message: "That username is already taken.",
-              });
-            } else {
-              const salt = 8;
-              const newUserMysql = {
-                id: v4(),
-                name: req.body.fname + " " + req.body.lname,
-                emailid: emailid,
-                role: 'user',
-                password: bcrypt.hashSync(password, salt),
-              };
+// passport.use(
+//   "local-signup",
+//   new LocalStrategy(
+//     {
+//       usernameField: "emailid",
+//       passwordField: "password",
+//       passReqToCallback: true,
+//     },
+//     function (req, emailid, password, done) {
+//         db.query(
+//           "SELECT * FROM users WHERE emailid = ?",
+//           [emailid],
+//           function (err, rows) {
+//             if (err) return done(err);
+//             if (rows.length) {
+//               return done(null, false, {
+//                 message: "That username is already taken.",
+//               });
+//             } else {
+//               const salt = 8;
+//               const newUserMysql = {
+//                 id: v4(),
+//                 name: req.body.fname + " " + req.body.lname,
+//                 emailid: emailid,
+//                 role: 'user',
+//                 password: bcrypt.hashSync(password, salt),
+//               };
 
-              db.query(
-                "INSERT INTO users (id,name,emailid,password,role) values (?,?,?,?,?)",
-                [
-                  newUserMysql.id,
-                  newUserMysql.name,
-                  newUserMysql.emailid,
-                  newUserMysql.password,
-                  newUserMysql.role,
-                ],
-                function (err, rows) {
-                  newUserMysql.id = rows.insertId;
-                  return done(null, newUserMysql);
-                }
-              );
-            }
-          }
-        );
-    }
-  )
-);
+//               db.query(
+//                 "INSERT INTO users (id,name,emailid,password,role) values (?,?,?,?,?)",
+//                 [
+//                   newUserMysql.id,
+//                   newUserMysql.name,
+//                   newUserMysql.emailid,
+//                   newUserMysql.password,
+//                   newUserMysql.role,
+//                 ],
+//                 function (err, rows) {
+//                   newUserMysql.id = rows.insertId;
+//                   return done(null, newUserMysql);
+//                 }
+//               );
+//             }
+//           }
+//         );
+//     }
+//   )
+// );
 
 module.exports = router;
