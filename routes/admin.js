@@ -5,19 +5,56 @@ const { v4 } = require("uuid");
 const generator = require("generate-password");
 const { adminLoggedIn } = require("../middleware/ensureLoggedIn");
 const { transport } = require("../mailer");
+const bcrypt = require("bcrypt");
 
 // Dashboard route
 
 router.get("/dashboard", adminLoggedIn, (req, res) => {
   //okr_team   ----<works_on>----   usersid
-  db.query("SELECT * FROM okr_team", (err, result) => {
+  const data = [];
+  db.query("SELECT * FROM okr", (err, result) => {
+    result.forEach((res) => {
+      db.query("SELECT * FROM okr_key where objective_id=", (err, result2) => {
+        if(err){
+          console.log(err);
+        }
+        result2.foreach((res2) => {
+          data.push(result);
+        });
+      });
+    });
     if (err) {
       console.log(err);
     } else {
-      res.json(result);
+      res.json(data);
     }
   });
 });
+
+
+// router.get("/dashboard", adminLoggedIn, (req, res) => {
+//   //okr_team   ----<works_on>----   usersid
+//   db.query("SELECT * FROM okr", (err, result) => {
+//     result.forEach((res) => {
+//       db.query("SELECT * FROM okr_key where objective_id = ?",[res.objective_id], (err, result2) => {
+//         result2.forEach((res2) => {
+//           db.query("SELECT * FROM key_attributes where key_id = ?",[res.key_id], (err, result2) => {
+//             result2.forEach((res2) => {
+//               var data = [
+                
+//               ]
+//             });
+//           });
+//         });
+//       });
+//     }
+//     if (err) {
+//       console.log(err);
+//     } else {
+//       res.json(result);
+//     }
+//   });
+// });
 
 router.get("/view-user", adminLoggedIn, (req, res) => {
   db.query("SELECT * FROM users", (err, result) => {
@@ -37,7 +74,7 @@ router.post("/add-user", adminLoggedIn, (req, res) => {
   });
 
   db.query(
-    "INSERT INTO users (id, name, emailid, password) VALUES (?,?,?,?)",
+    "INSERT INTO users (id, name, emailid, password, 'role') VALUES (?,?,?,?,'user')",
     [v4(), name, emailid, bcrypt.hashSync(password, 8)],
     (err, result) => {
       if (err) console.log(err);
