@@ -3,8 +3,8 @@ const router = express.Router();
 const db = require("../db/connectdb");
 const { v4 } = require("uuid");
 const generator = require("generate-password");
-const { adminLoggedIn } = require("../middleware/ensureLoggedIn");
-const { transport } = require("../mailer");
+const { adminLoggedIn } = require("../middleware/ensureLoggedIn").default;
+const transport = require("../mailer");
 const bcrypt = require("bcrypt");
 
 // Dashboard route
@@ -58,22 +58,26 @@ router.post("/add-user", (req, res) => {
         });
       }
 
-      // if (result) {
-      //       const mailOptions = {
-      //         from: "s3.silveira@gmail.com",
-      //         to: emailid,
-      //         subject: "Email Password",
-      //         text: "",
-      //         html:
-      //           "<p>" +
-      //           emailid +
-      //           "</p><br><p>Your password is " +
-      //           password +
-      //           "</p>",
-      //       };
+      if (result) {
+        transport.sendMail({
+          from: "s3.silveira@gmail.com",
+          to: emailid,
+          subject: "Email Password",
+          text: "",
+          html:
+            "<p>" +
+            emailid +
+            "</p><br><p>Your password is " +
+            password +
+            "</p>",
+        }).then((info) => {
+          res.json({ message: "You might have received an email"});
+        }).catch((err) => {
+          res.status(500).json({ error: err });
+        });
 
-      //       const result = transport.sendMail(mailOptions);
-      //   }
+
+        }
 
     }
   );
@@ -106,20 +110,38 @@ router.get("/view-teams", (req, res) => {
   });
 });
 
-router.post("/add-objective", (req, res) => {
-  const { objective, user_id } = req.body;
+router.post("/update-team", (req, res) => {
+  const { teamcolor, teamid } = req.body;
   db.query(
-    "INSERT INTO okr (objective_id, name, user_id) VALUES (?,?,?)",
-    [v4(), objective, user_id],
+    "Update okr_team set tcolor = ? where team_id = ?",
+    [teamcolor, teamid],
     (err, result) => {
       if (err) {
         console.log(err);
       } else {
-        res.json({
-          objectiveid: result.objective_id,
-          objective: objective,
-        });
+        res.json(result);
       }
+    }
+  );
+});
+
+router.post("/add-objective", (req, res) => {
+  const { objective, userid, teamid } = req.body;
+  db.query(
+    "INSERT INTO okr (objective_id, name, user_id, team_id) VALUES (?,?,?,?)",
+    [v4(), objective, userid],
+    (err, result) => {
+      if(result){
+        if (err) {
+          console.log(err);
+        } else {
+          res.json({
+            objectiveid: result.objective_id,
+            objective: objective,
+          });
+        }
+      }
+      
     }
   );
 });
@@ -187,48 +209,37 @@ router.post("/password-reset", (req, res) => {
       if (err) throw err;
       //console.log(result[0]);
       if (result) {
-        async function sendEmail() {
-          try {
-            const mailOptions = {
-              from: "s3.silveira@gmail.com",
-              to: emailid,
-              subject: "Reset email",
-              text: "Sent from Node.js",
-              //const link = `${clientURL}/passwordReset?token=${resetToken}&id=${user._id}`;
-              html: `<html>
-              <head>
-                  <style>
-                  </style>
-              </head>
-              <body>
-                  <p>Hi ${result.admin_name},</p>
-                  <p>You requested to reset your password.</p>
-                  <p> Please, click the link below to reset your password</p>
-                  <a href="${clientURL}/update-password/?id=${emailid}&token=${resetToken}">Reset Password</a>
-              </body>
-          </html>`  //`<p>Click on the link to reset your password</p><br><a href=${clientURL}/update-password/?id=${emailid}&token=${resetToken}><br>Reset Password</a>`,
-            };
-
-            const result = await transport.sendMail(mailOptions);
-            return result;
-          } catch (error) {
-            console.log(error);
-          }
-        }
-        sendEmail().then(() => { //removed result in prameter
-            console.log("Email has been sent");
-            db.query(
-              "UPDATE users SET pass_reset_token = ? WHERE emailid = ?",
-              [v4(), emailid],
-              (err, result) => {
-                if (err) res.status(400).json({ message: "Error occured" });
-              }
-            );
-            res.status(200).json({ message: "Email has been sent" }).redirect("/");
-        }).catch((error) => {
-            res.json({ message: "incorrect emailid" });
-        });
-        res.redirect("/");
+        const mailOptions = {
+          from: "s3.silveira@gmail.com",
+          to: emailid,
+          subject: "Reset email",
+          text: "Sent from Node.js",
+          //const link = `${clientURL}/passwordReset?token=${resetToken}&id=${user._id}`;
+          html: `<html>
+          <head>
+              <style>
+              </style>
+          </head>
+          <body>
+              <p>Hi ${result.admin_name},</p>
+              <p>You requested to reset your password.</p>
+              <p> Please, click the link below to reset your password</p>
+              <a href="${clientURL}/update-password/?id=${emailid}&token=${resetToken}">Reset Password</a>
+          </body>
+      </html>`  //`<p>Click on the link to reset your password</p><br><a href=${clientURL}/update-password/?id=${emailid}&token=${resetToken}><br>Reset Password</a>`,
+        };
+        transport.sendMail(mailOptions).then(() => { //removed result in prameter
+          db.query(
+            "UPDATE users SET pass_reset_token = ? WHERE emailid = ?",
+            [v4(), emailid],
+            (err, result) => {
+              if (err) res.status(400).json({ err: err });
+            }
+          );
+          res.status(200).json({ message: "Email has been sent" });
+      }).catch((error) => {
+          res.json({ message: "incorrect emailid" });
+      });
       }
     }
   );
