@@ -11,7 +11,7 @@ passport.use(
     {
       usernameField: "emailid",
       passwordField: "password",
-      passReqToCallback: true,
+      passReqToCallback: true
     },
     function (req, emailid, password, done) {
       db.query(
@@ -19,17 +19,14 @@ passport.use(
         [emailid],
         function (err, row) {
           if (err) {
-            res.status(401).json({ message: "Incorrect username or password." });
             return done(err);
           }
           if (!row.length) {
-            res.status(401).json({ message: "Incorrect username or password." });
             return done(null, false, {
               message: "Incorrect username or password.",
             });
           }
           if (!bcrypt.compareSync(password, row[0].password.toString("utf8"))) {
-            res.status(401).json({ message: "Incorrect username or password." });
             return done(null, false, {
               message: "Incorrect username or password.",
             });
@@ -47,7 +44,7 @@ passport.use(
     {
       usernameField: "emailid",
       passwordField: "password",
-      passReqToCallback: true,
+      passReqToCallback: true
     },
     function (req, emailid, password, done) {
       db.query(
@@ -55,11 +52,9 @@ passport.use(
         [emailid],
         function (err, row) {
           if (err) {
-            res.status(401).json({ message: "Incorrect username or password." });
             return done(err);
           }
           if (!row.length) {
-            res.status(401).json({ message: "Incorrect username or password." });
             return done(null, false, {
               message: "Incorrect username or password.",
             });
@@ -68,7 +63,6 @@ passport.use(
             return done(null, false, {
               message: "Incorrect username or password.",
             });
-            res.status(401).json({ message: "Incorrect username or password." });
           }
           return done(null, row[0]);
         }
@@ -99,7 +93,6 @@ const router = express.Router();
 router.post("/login/admin", passport.authenticate("admin"), (req, res) => {
     if (req.isAuthenticated() && req.user.role == "admin") {
       res.json(req.user)
-      //res.json(req.user).redirect("/api/admin/dashboard");
     }
   });
 
