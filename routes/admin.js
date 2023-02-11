@@ -106,6 +106,21 @@ router.get("/view-teams", (req, res) => {
   });
 });
 
+router.post("/update-team", (req, res) => {
+  const { teamcolor, teamid } = req.body;
+  db.query(
+    "Update okr_team set tcolor = ? where team_id = ?",
+    [teamcolor, teamid],
+    (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.json(result);
+      }
+    }
+  );
+});
+
 router.post("/add-objective", (req, res) => {
   const { objective, user_id } = req.body;
   db.query(

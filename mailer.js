@@ -12,4 +12,9 @@ const transport = nodemailer.createTransport({
   },
 });
 
+const sendEmail = async (emailOptions) => {
+  let emailTransporter = await createTransporter();
+  await emailTransporter.sendMail(emailOptions);
+};
+
 module.exports = transport;
