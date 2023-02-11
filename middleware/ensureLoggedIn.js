@@ -14,4 +14,4 @@ const adminLoggedIn = (req, res, next) => {
   }
 }
 
-module.exports = { userLoggedIn, adminLoggedIn };
+export default { userLoggedIn, adminLoggedIn };

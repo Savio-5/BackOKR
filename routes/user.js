@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/connectdb');
 const { v4 } = require('uuid');
-const { userLoggedIn } = require("../middleware/ensureLoggedIn");
+const { userLoggedIn } = require("../middleware/ensureLoggedIn").default;
 
 router.get('/dashboard', userLoggedIn, (req, res) => {
     //okr_team   ----<works_on>----   users

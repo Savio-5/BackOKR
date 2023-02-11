@@ -3,8 +3,8 @@ const router = express.Router();
 const db = require("../db/connectdb");
 const { v4 } = require("uuid");
 const generator = require("generate-password");
-const { adminLoggedIn } = require("../middleware/ensureLoggedIn");
-const { transport } = require("../mailer");
+const { adminLoggedIn } = require("../middleware/ensureLoggedIn").default;
+const transport = require("../mailer");
 const bcrypt = require("bcrypt");
 
 // Dashboard route
@@ -58,22 +58,26 @@ router.post("/add-user", (req, res) => {
         });
       }
 
-      // if (result) {
-      //       const mailOptions = {
-      //         from: "s3.silveira@gmail.com",
-      //         to: emailid,
-      //         subject: "Email Password",
-      //         text: "",
-      //         html:
-      //           "<p>" +
-      //           emailid +
-      //           "</p><br><p>Your password is " +
-      //           password +
-      //           "</p>",
-      //       };
+      if (result) {
+        transport.sendMail({
+          from: "s3.silveira@gmail.com",
+          to: emailid,
+          subject: "Email Password",
+          text: "",
+          html:
+            "<p>" +
+            emailid +
+            "</p><br><p>Your password is " +
+            password +
+            "</p>",
+        }).then((info) => {
+          res.json({ message: "You might have received an email"});
+        }).catch((err) => {
+          res.status(500).json({ error: err });
+        });
 
-      //       const result = transport.sendMail(mailOptions);
-      //   }
+
+        }
 
     }
   );
@@ -122,19 +126,22 @@ router.post("/update-team", (req, res) => {
 });
 
 router.post("/add-objective", (req, res) => {
-  const { objective, user_id } = req.body;
+  const { objective, userid, teamid } = req.body;
   db.query(
-    "INSERT INTO okr (objective_id, name, user_id) VALUES (?,?,?)",
-    [v4(), objective, user_id],
+    "INSERT INTO okr (objective_id, name, user_id, team_id) VALUES (?,?,?,?)",
+    [v4(), objective, userid],
     (err, result) => {
-      if (err) {
-        console.log(err);
-      } else {
-        res.json({
-          objectiveid: result.objective_id,
-          objective: objective,
-        });
+      if(result){
+        if (err) {
+          console.log(err);
+        } else {
+          res.json({
+            objectiveid: result.objective_id,
+            objective: objective,
+          });
+        }
       }
+      
     }
   );
 });
