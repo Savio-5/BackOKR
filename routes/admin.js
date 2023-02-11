@@ -9,7 +9,7 @@ const bcrypt = require("bcrypt");
 
 // Dashboard route
 
-router.get("/dashboard", adminLoggedIn, (req, res) => {
+router.get("/dashboard", (req, res) => {
   //okr_team   ----<works_on>----   usersid
   const data = [];
   db.query("SELECT * FROM okr", (err, result) => {
@@ -56,7 +56,7 @@ router.get("/dashboard", adminLoggedIn, (req, res) => {
 //   });
 // });
 
-router.get("/view-user", adminLoggedIn, (req, res) => {
+router.get("/view-user", (req, res) => {
   db.query("SELECT * FROM users", (err, result) => {
     if (err) {
       console.log(err);
@@ -66,7 +66,7 @@ router.get("/view-user", adminLoggedIn, (req, res) => {
   });
 });
 
-router.post("/add-user", adminLoggedIn, (req, res) => {
+router.post("/add-user", (req, res) => {
   const { name, emailid } = req.body;
   const password = generator.generate({
     length: 10,
@@ -74,53 +74,37 @@ router.post("/add-user", adminLoggedIn, (req, res) => {
   });
 
   db.query(
-    "INSERT INTO users (id, name, emailid, password, 'role') VALUES (?,?,?,?,'user')",
+    "INSERT INTO users (id, name, emailid, password, role) VALUES (?,?,?,?,'user')",
     [v4(), name, emailid, bcrypt.hashSync(password, 8)],
     (err, result) => {
-      if (err) console.log(err);
-      if (result) {
-        async function sendEmail() {
-          try {
-            const mailOptions = {
-              from: "s3.silveira@gmail.com",
-              to: emailid,
-              subject: "Email Password",
-              text: "",
-              html:
-                "<p>" +
-                emailid +
-                "</p><br><p>Your password is " +
-                password +
-                "</p>",
-            };
-
-            const result = await transport.sendMail(mailOptions);
-
-            return result;
-          } catch (error) {
-            console.log(error);
-          }
-        }
-
-        sendEmail()
-          .then((result) => {
-            // console.log("Email has been sent");
-            res.status(200).json({
-                message: "Email has been sent",
-            });
-          })
-          .catch((error) => {
-            console.log(`An ${error} occured`);
-            res.json({
-                error: error
-            });
-          });
+      if (err) {
+        res.status(400).json({
+          error: err,
+        });
       }
+
+      // if (result) {
+      //       const mailOptions = {
+      //         from: "s3.silveira@gmail.com",
+      //         to: emailid,
+      //         subject: "Email Password",
+      //         text: "",
+      //         html:
+      //           "<p>" +
+      //           emailid +
+      //           "</p><br><p>Your password is " +
+      //           password +
+      //           "</p>",
+      //       };
+
+      //       const result = transport.sendMail(mailOptions);
+      //   }
+
     }
   );
 });
 
-router.post("/create-team", adminLoggedIn, (req, res) => {
+router.post("/create-team", (req, res) => {
   const { teamname, teamcolor, teamtitle } = req.body;
   db.query(
     "INSERT INTO okr_team (team_id, team_name, tcolor, title) VALUES (?,?,?,?)",
@@ -137,7 +121,7 @@ router.post("/create-team", adminLoggedIn, (req, res) => {
   );
 });
 
-router.get("/view-teams", adminLoggedIn, (req, res) => {
+router.get("/view-teams", (req, res) => {
   db.query("SELECT * FROM okr_team", (err, result) => {
     if (err) {
       console.log(err);
@@ -147,7 +131,7 @@ router.get("/view-teams", adminLoggedIn, (req, res) => {
   });
 });
 
-router.post("/add-objective", adminLoggedIn, (req, res) => {
+router.post("/add-objective", (req, res) => {
   const { objective, user_id } = req.body;
   db.query(
     "INSERT INTO okr (objective_id, name, user_id) VALUES (?,?,?)",
@@ -165,7 +149,7 @@ router.post("/add-objective", adminLoggedIn, (req, res) => {
   );
 });
 
-router.delete("/delete-objective/:id", adminLoggedIn, (req, res) => {
+router.delete("/delete-objective/:id", (req, res) => {
   const id = req.params.id;
   db.query("DELETE FROM okr WHERE objective_id = ?", id, (err, result) => {
     if (err) {
@@ -176,7 +160,7 @@ router.delete("/delete-objective/:id", adminLoggedIn, (req, res) => {
   });
 });
 
-router.post("/add-keyresult", adminLoggedIn, (req, res) => {
+router.post("/add-keyresult", (req, res) => {
   const { keyname, startdate, enddate, obj_name } = req.body;
   const keyid = v4();
   db.query(
@@ -184,20 +168,27 @@ router.post("/add-keyresult", adminLoggedIn, (req, res) => {
     [keyid, keyname],
     (err, result1) => {
       if (err) {
-        console.log(err);
+        res.status(400).json({
+          error: err,
+        });
       } else {
         db.query(
           "SELECT objective_id FROM okr WHERE objective_name = ?"[obj_name],
           (err, result2) => {
             if (err) {
-              console.log(err);
-            } else {
+              res.status(400).json({
+                error: err,
+              });
+            }
+            if (result2) {
               db.query(
                 "INSERT INTO obj_contains (objective_id, keyid, startdate, enddate) VALUES (?,?,?,?)",
                 [result2.objective_id, keyid, startdate, enddate],
                 (err, result3) => {
                   if (err) {
-                    console.log(err);
+                    res.status(400).json({
+                      error: err,
+                    });
                   } else {
                     res.json(result3);
                   }
