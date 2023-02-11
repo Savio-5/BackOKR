@@ -14,7 +14,7 @@ router.get("/dashboard", (req, res) => {
   const data = [];
   db.query("SELECT * FROM okr", (err, result) => {
     result.forEach((res) => {
-      db.query("SELECT * FROM okr_key where objective_id=", (err, result2) => {
+      db.query("SELECT * FROM okr_key where objective_id = ?",[res.objective_id], (err, result2) => {
         if(err){
           console.log(err);
         }
@@ -30,31 +30,6 @@ router.get("/dashboard", (req, res) => {
     }
   });
 });
-
-
-// router.get("/dashboard", adminLoggedIn, (req, res) => {
-//   //okr_team   ----<works_on>----   usersid
-//   db.query("SELECT * FROM okr", (err, result) => {
-//     result.forEach((res) => {
-//       db.query("SELECT * FROM okr_key where objective_id = ?",[res.objective_id], (err, result2) => {
-//         result2.forEach((res2) => {
-//           db.query("SELECT * FROM key_attributes where key_id = ?",[res.key_id], (err, result2) => {
-//             result2.forEach((res2) => {
-//               var data = [
-                
-//               ]
-//             });
-//           });
-//         });
-//       });
-//     }
-//     if (err) {
-//       console.log(err);
-//     } else {
-//       res.json(result);
-//     }
-//   });
-// });
 
 router.get("/view-user", (req, res) => {
   db.query("SELECT * FROM users", (err, result) => {
@@ -113,9 +88,9 @@ router.post("/create-team", (req, res) => {
       if (err) {
         console.log(err);
       } else {
-        // res.json({
-        //     res
-        // });
+        res.json({
+          message : "Team created"
+        });
       }
     }
   );

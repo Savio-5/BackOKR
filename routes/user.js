@@ -6,7 +6,7 @@ const { userLoggedIn } = require("../middleware/ensureLoggedIn");
 
 router.get('/dashboard', userLoggedIn, (req, res) => {
     //okr_team   ----<works_on>----   users
-    db.query('SELECT * FROM okr_team where ', (err, result) => {
+    db.query('SELECT * FROM okr_team where team_id = (Select * from works_on where user_id= ? )',[req.user.id], (err, result) => {
         if (err) {
             console.log(err);
         } else {
@@ -26,6 +26,5 @@ router.get('/update-key', userLoggedIn, (req, res) => {
     });
 });
 
-router.post('')
 
 module.exports = router;
