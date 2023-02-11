@@ -209,48 +209,37 @@ router.post("/password-reset", (req, res) => {
       if (err) throw err;
       //console.log(result[0]);
       if (result) {
-        async function sendEmail() {
-          try {
-            const mailOptions = {
-              from: "s3.silveira@gmail.com",
-              to: emailid,
-              subject: "Reset email",
-              text: "Sent from Node.js",
-              //const link = `${clientURL}/passwordReset?token=${resetToken}&id=${user._id}`;
-              html: `<html>
-              <head>
-                  <style>
-                  </style>
-              </head>
-              <body>
-                  <p>Hi ${result.admin_name},</p>
-                  <p>You requested to reset your password.</p>
-                  <p> Please, click the link below to reset your password</p>
-                  <a href="${clientURL}/update-password/?id=${emailid}&token=${resetToken}">Reset Password</a>
-              </body>
-          </html>`  //`<p>Click on the link to reset your password</p><br><a href=${clientURL}/update-password/?id=${emailid}&token=${resetToken}><br>Reset Password</a>`,
-            };
-
-            const result = await transport.sendMail(mailOptions);
-            return result;
-          } catch (error) {
-            console.log(error);
-          }
-        }
-        sendEmail().then(() => { //removed result in prameter
-            console.log("Email has been sent");
-            db.query(
-              "UPDATE users SET pass_reset_token = ? WHERE emailid = ?",
-              [v4(), emailid],
-              (err, result) => {
-                if (err) res.status(400).json({ message: "Error occured" });
-              }
-            );
-            res.status(200).json({ message: "Email has been sent" }).redirect("/");
-        }).catch((error) => {
-            res.json({ message: "incorrect emailid" });
-        });
-        res.redirect("/");
+        const mailOptions = {
+          from: "s3.silveira@gmail.com",
+          to: emailid,
+          subject: "Reset email",
+          text: "Sent from Node.js",
+          //const link = `${clientURL}/passwordReset?token=${resetToken}&id=${user._id}`;
+          html: `<html>
+          <head>
+              <style>
+              </style>
+          </head>
+          <body>
+              <p>Hi ${result.admin_name},</p>
+              <p>You requested to reset your password.</p>
+              <p> Please, click the link below to reset your password</p>
+              <a href="${clientURL}/update-password/?id=${emailid}&token=${resetToken}">Reset Password</a>
+          </body>
+      </html>`  //`<p>Click on the link to reset your password</p><br><a href=${clientURL}/update-password/?id=${emailid}&token=${resetToken}><br>Reset Password</a>`,
+        };
+        transport.sendMail(mailOptions).then(() => { //removed result in prameter
+          db.query(
+            "UPDATE users SET pass_reset_token = ? WHERE emailid = ?",
+            [v4(), emailid],
+            (err, result) => {
+              if (err) res.status(400).json({ err: err });
+            }
+          );
+          res.status(200).json({ message: "Email has been sent" });
+      }).catch((error) => {
+          res.json({ message: "incorrect emailid" });
+      });
       }
     }
   );
