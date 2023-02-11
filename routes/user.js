@@ -15,6 +15,17 @@ router.get('/dashboard', userLoggedIn, (req, res) => {
     });
 });
 
+router.get('/update-key', userLoggedIn, (req, res) => {
+    //okr_team   ----<works_on>----   users
+    db.query('SELECT * FROM okr_team where ', (err, result) => {
+        if (err) {
+            console.log(err);
+        } else {
+            res.json(result);
+        }
+    });
+});
+
 router.post('')
 
 module.exports = router;
