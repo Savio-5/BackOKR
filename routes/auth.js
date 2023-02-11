@@ -93,6 +93,7 @@ const router = express.Router();
 router.post("/login/admin", passport.authenticate("admin"), (req, res) => {
     if (req.isAuthenticated() && req.user.role == "admin") {
       res.json(req.user)
+      //res.json(req.user).redirect("/api/admin/dashboard");
     }
   });
 
@@ -107,16 +108,21 @@ router.post("/login", passport.authenticate("user",{
 // }
 );
 
-router.post("/logout", function (req, res, next) {
-  req.logout(function (err) {
-    req.session.destroy();
-    if (err) {
-      return next(err);
-    }
-    res.redirect("/");
+// router.post("/logout", function (req, res, next) {
+//   req.logout(function (err) {
+//     if (err) {
+//       return next(err);
+//     }
+//     res.redirect("/test");
+//   });
+// });
+
+router.get('/logout', (req, res) => {
+  req.session.destroy(function (err) {
+    res.clearCookie('connect.sid');
+    res.redirect('/'); //Inside a callback… bulletproof!
   });
 });
-
 
 // router.post("/signup", passport.authenticate("local-signup"), (req, res) => {
 //   if (req.isAuthenticated() && req.user.role == "admin") {

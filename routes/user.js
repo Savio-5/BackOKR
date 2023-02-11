@@ -15,6 +15,6 @@ router.get('/dashboard', userLoggedIn, (req, res) => {
     });
 });
 
-router.post
+router.post('')
 
 module.exports = router;
